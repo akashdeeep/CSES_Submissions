@@ -140,12 +140,13 @@ const int lim = 2e5;
 
 
 
-const int N = 200007;
-int f[N], rf[N];
-int C(int u, int v) {
-    if (u < v || u < 0 || v < 0) return 0ll;
-    return ((f[u] * rf[u - v] % mod) * rf[v]) % mod;
-}
+// const int N = 2000007;
+// int f[N], rf[N];
+// int C(int u, int v) {
+//     if (u < v || u < 0 || v < 0) return 0ll;
+//     return ((f[u] * rf[u - v] % mod) * rf[v]) % mod;
+// }
+
 
 
 // const ll MAXM = 1e5;
@@ -223,99 +224,53 @@ long long highestPowerof2(long long N)
 }
 
 
-int bfs(int source, int sink, vector<vector<int>> &g, int n, vector<int> &parent) {
-    queue<pair<int, int>> q;
-    vector<bool> vis(n, 0);
-    q.push({source, INT_MAX});
-    vis[source] = 1;
-    while (!q.empty())
-    {
-        source = q.front().first;
-        int cap = q.front().second;
-        q.pop();
-        for (int i = 0; i < n; i++)
-        {
-            if (g[source][i] && !vis[i])
-            {
-                parent[i] = source;
-                if (i == sink)
-                    return min(cap, g[source][i]);
-                q.push({i, min(cap, g[source][i])});
-                vis[i] = 1;
+vector<vector<int>> mul(vector<vector<int>> a, vector<vector<int>> b) {
+    vector<vector<int>> c(6, vector<int> (b[0].size()));
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < b[0].size(); j++) {
+            for (int k = 0; k < 6; k++) {
+                (c[i][j] += a[i][k] * b[k][j] % mod) %= mod;
             }
         }
     }
-    return 0;
+    return c;
 }
 
-int ford_fulkerson(int source, int sink, vector<vector<int>> &g, int n)
-{
-    int flow = 0;
-    vector<int> parent(n, -1);
-    int min_cap;
-    while (min_cap = bfs(source, sink, g, n, parent))
-    {
-        flow += min_cap;
-        int u, v = sink;
-        while (v != source)
-        {
-            u = parent[v];
-            g[u][v] -= min_cap;
-            g[v][u] += min_cap;
-            v = u;
-        }
+vector<vector<int>> exp(vector<vector<int>> x, int y) {
+    vector<vector<int>> res(6, vector<int> (6));
+    for (int i = 0; i < 6; i++) {
+        res[i][i] = 1;
     }
-    return flow;
+    while (y > 0) {
+        if (y & 1) {
+            res = mul(res, x);
+        }
+        y = y >> 1;
+        x = mul(x, x);
+    }
+    return res;
 }
-
-vector<vector<int>> adj(N);
-vector<int> vis(N);
-vector<int> parity(N);
 
 
 
 void solve() {
     int n; cin >> n;
-    vector<vector<int>> e;
-    for (int i = 0; i < n - 1; i++) {
-        int a, b; cin >> a >> b;
-        adj[a].push_back(b);
-        adj[b].push_back(a);
-        e.push_back({a, b, 1});
+    vector<vector<int>> x(6, vector<int> (6));
+    for (int i = 0; i < 5; i++) {
+        x[i][i + 1] = 1, x[5][i] = 1;
     }
-    queue<int> q;
-    int i = 0;
-    while (!q.empty()) {
-        int sz = q.size();
-        while (sz--) {
-            int node = q.front();
-            vis[node] = 1;
-            q.pop();
-            if (i % 2) {
-                parity[node] = 1;
-            }
-            else {
-                parity[node] = 0;
-            }
-            for (auto i : adj[node]) {
-                if (!vis[i]) {
-                    q.push(i);
-                }
-            }
-        }
-        i++;
-    }
-    for (int i = 1; i <= n; i++) {
-        if (parity[i] == 1) {
-            e.push_back({i, n + 1, 1});
-        }
-        else {
-            e.push_back({0, i, 1});
-        }
-    }
-    cout << ford_fulkerson(0, n + 1, e, n + 2) << endl;
+    x[5][5] = 1;
+    x = exp(x, n);
+    vector<vector<int>> temp;
+    temp.push_back({1});
+    temp.push_back({1});
+    temp.push_back({2});
+    temp.push_back({4});
+    temp.push_back({8});
+    temp.push_back({16});
+    vector<vector<int>> out = mul(x, temp);
+    cout << out[0][0] << endl;
 }
-
 
 
 
@@ -338,13 +293,18 @@ signed main()
     freopen("output.txt", "w", stdout); // this one for output
 #endif
 
+    // cnt[0] = 0;
+    // for (int i = 1; i <= N; i++) {
+    //     cnt[i] = ((i + 1) * (i + 1) - i * i + i - 1) / i + cnt[i - 1];
+    //     cout << cnt[i] << endl;
+    // }
 
 
-    int T;
-    cin >> T;
-    // int count = 0;
-    while (T--)
-        solve();
+    // int T;
+    // cin >> T;
+    // // int count = 0;
+    // while (T--)
+    solve();
 
 #ifdef ONLINEJUDGE
     fprintf(stderr, "\n>> Runtime: %.10fs\n", (double)(clock() - tStart) / CLOCKS_PER_SEC); // this line gives your code runtime
@@ -352,5 +312,3 @@ signed main()
 
     return 0;
 }
-
-
